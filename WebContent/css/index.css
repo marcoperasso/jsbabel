@@ -1,0 +1,66 @@
+
+table.index {
+    padding: 20px;
+}
+
+input.text {
+    font: 18px/15px "Trebuchet MS", "Lucida Grande", Verdana, sans-serif;
+    background: url("../img/fieldBgnd.png") no-repeat top left;
+    background-color: transparent;
+    width: 440px;
+    padding: 19px;
+    margin: 0px 2px 0px 5px;
+    border: 0px solid #FBE250;
+    margin: 0 2px 0 5px;
+}
+
+iframe#output {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+fieldset {
+    width: 230px;
+}
+
+a.actionbutton {
+    width: 106px;
+    height: 22px;
+    font: 18px/18px arial, Helvetica, sans-serif;
+    background: url("../img/tryBtnLarge.png") no-repeat 3px top;
+    text-align: center;
+    display: block;
+    color: blue;
+    padding: 17px 0px 18px 2px;
+    margin: 0;
+    text-shadow: #025996 0px 1px 1px;
+    cursor: pointer;
+    background-position-x: center;
+}
+
+a.actionbutton:hover {
+    text-decoration: none;
+    color: white;
+    background: url("../img/tryBtnLarge.png") no-repeat;
+    background-position: center -59px;
+}
+
+a#back {
+    background-image: url("../img/backtojsbabel.png");
+    display: inline-block;
+    z-index: 10;
+    width: 250px;
+    line-height: 30px;
+    cursor: pointer;
+}
+
+div#backcontainer {
+    text-align: center;
+    display: none;
+}
+fieldset.outer{
+    width: 85%;
+    min-width: 800px;
+}
+p{width: 85%;}

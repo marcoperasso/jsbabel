@@ -1,0 +1,13 @@
+CATALINA.BAT:
+
+Opzioni per forzare la GC nel PermGen space:
+-XX:MaxPermSize=128m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled
+
+Opzioni per abilitare il profiling:
+-Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=9090 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false
+
+set JAVA_OPTS=%JAVA_OPTS%  <mie opzioni>
+
+
+PER KILLARE JAVA:
+taskkill /f /IM java.exe

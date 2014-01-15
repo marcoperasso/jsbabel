@@ -1,0 +1,175 @@
+table.translator {
+    width: 100%;
+}
+
+table.translator td {
+    width: 50%;
+}
+
+div.inlineTranslator 
+{
+    width: 100%;
+    height: 100%;
+    left: 0px;
+    overflow: hidden;
+}
+
+div.inlineTranslator table {
+    background-color: #FAA408;
+    width: 100%;
+}
+div.translatorcontentcontainer
+{
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+}
+div.inlineTranslator table thead {
+    background-color: lightBlue;
+    text-align: center;
+}
+
+span.inlineTranslatorTitle {
+    line-height: 20px;
+}
+
+div.inlineTranslator table tbody tr.htmlRow {
+    background-color: green;
+}
+
+div.inlineTranslator table tbody tr td {
+    text-align: left;
+    text-decoration: blink;
+}
+div.inlineTranslator table tbody tr td.ignoreColumn{
+    background-image: url("../img/translate.png");
+    background-repeat:no-repeat;
+    background-position:center;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 40px;
+    width: 40px;
+}
+div.inlineTranslator table tbody tr td.ignoreColumn.ignoreIsActive
+{
+    background-image: url("../img/notranslate.png");
+    
+}
+
+div.inlineTranslator table tbody tr td.specificColumn{
+    background-image: url("../img/page.png");
+    background-repeat:no-repeat;
+    background-position:center;
+    text-align: center;
+    vertical-align: middle;
+    min-width: 40px;
+    width: 40px;
+}
+div.inlineTranslator table tbody tr td.titleColumn
+{
+    width: 300px;
+}
+div.inlineTranslator table tbody tr td.arrowColumn
+{
+    width: 20px;
+    vertical-align: middle;
+}
+div.inlineTranslator table tbody tr td.arrowColumn img
+{
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+div.inlineTranslator table tbody tr td.baseColumn
+{
+    min-width: 35%;
+}
+div.inlineTranslator table tbody tr td.targetColumn
+{
+    min-width: 35%;
+}
+
+
+div.inlineTranslator table tbody tr td textarea {
+    width: 98%;
+}
+div.inlineTranslator table tbody tr td textarea.baseInput {
+
+}
+
+div.inlineTranslator table tbody tr td textarea.targetInput {
+
+}
+div.inlineTranslator table tbody tr td img.ignoreInput {
+    width:32px;
+    height: 32px;
+}
+div.inlineTranslator table tbody tr td textarea.htmlInput {
+    width:100%;
+    height: 100%;
+    padding: 5px;
+}
+div.inlineTranslator table tbody tr td textarea:FOCUS {
+    background-color: yellow;
+}
+
+
+
+.textRow
+{
+    text-decoration: underline;
+    cursor: pointer;
+    color: blue;
+}
+div.inlineTranslator table thead img {
+    float: left;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    margin: 3px 3px 3px 3px;
+    box-shadow: 1px 1px 1px 1px #333333;
+}
+div.inlineTranslator table thead img:hover {
+    margin: 4px 2px 2px 4px;	
+}
+
+div.inlineTranslator table thead a {
+    margin: 0px 3px 0px 3px;
+    float:left;
+    display: inline-block;
+    padding: 20px 0px 0px 0px;
+    background-image: url("../img/tab1.png");
+    background-repeat: no-repeat;
+    background-position: bottom;
+    font-style: oblique;
+    font-family: cursive;
+    width: 90px;
+    font-size: 14px;
+    text-align: center;
+    color: graytext;
+    cursor: pointer;
+}
+
+div.inlineTranslator table thead a.selected {
+    background-image: url("../img/tab2.png");
+    color: black;
+}
+div.notranslations h2, div.notranslations p{
+    text-align: center;
+}
+table,td,th {
+    border: none;
+    vertical-align: top;
+    padding-top: 2px;
+}
+
+th 
+{
+    background-color: green;
+    color: white;
+}
+
+body
+{
+    margin:0px
+}

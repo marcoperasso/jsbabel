@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head lang="en">
+        <meta name="generator" content="TEst" /> 
+        <link href="css/common.css" type="text/css" rel="stylesheet" />
+        <title>jsbabel testing page</title>
+        <script type="text/javascript" src="js/babel.js">
+	
+        </script>
+        <script type="text/javascript" src="js/test.js">
+	
+        </script>
+        <style type="text/css">
+            H1 {
+                border: solid;
+                text-align: center
+            }
+        </style>
+    </head> 
+    <body>
+        This is a first level node of text
+        <script type="text/javascript">
+            function message() {
+                alert(_jsb("Hello world"));
+                alert(sMessage);
+            }
+        </script>
+        <h1>jsbabel testing page</h1>
+
+        <h2>You are the visitor number: 153539 - Visitors now connected: 3</h2>
+
+        <a title="Test link" href="www.mtbscout.it">This is a link</a>
+
+        <p>This is a paragraph</p>
+        <p>THIS IS UPPERCASE</p>
+        <p>this is lowercase?</p>
+        <p>HELLO WORLD</p>
+         <p>hello world</p>
+        <div>This is text with strange characters: !"&pound;$%&amp;/()=?^
+            and irregular spaces and line breaks</div>
+
+        <p>This paragraph il very long, because I repeated this sentence
+            many times. All work and no play makes Jack a dull boy. All work and
+            no play makes Jack a dull boy. All work and no play makes Jack a dull
+            boy. All work and no play makes Jack a dull boy. All work and no play
+            makes Jack a dull boy. All work and no play makes Jack a dull boy. All
+            work and no play makes Jack a dull boy. All work and no play makes
+            Jack a dull boy. All work and no play makes Jack a dull boy. All work
+            and no play makes Jack a dull boy. All work and no play makes Jack a
+            dull boy. All work and no play makes Jack a dull boy. All work and no
+            play makes Jack a dull boy. All work and no play makes Jack a dull
+            boy. All work and no play makes Jack a dull boy. All work and no play
+            makes Jack a dull boy.</p>
+
+        <p id="complicatedParagraph">
+            This <b>nice</b> <i>paragraph</i> contains different <big>formatting</big>
+            <a title="This &egrave; test link" href="www.mtbscout.it">styles</a>
+        </p>
+         <p id="complicatedParagraphTwo">
+            Another complicated <a title="Complicated!" href=#">paragraph</a>
+        </p>
+        <input type="button" onclick="message();"value="Click this button"></input>
+        <div>0
+            <div>1
+                <div>2
+                    <div>3</div>
+                    <div>3</div>
+                </div>
+                <div>2</div>
+                <div>
+                    <div>1
+                        <div>2
+                            <div>3</div>
+                        </div>                        
+                    </div>
+                    <div>1
+                        <div>2
+                            <div>3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+         This is a first level node of text at the end of the body
+    </body>
+</html>
+

@@ -1,0 +1,148 @@
+h1 {
+    font-size: 30px;
+    font-weight: bold;
+    color: orange;
+    display: block;
+    margin: 0px;
+    padding: 0px 20px 20px 0px;
+    text-align: center;        
+}
+
+h2 {
+    text-align: center;
+}
+p{
+    margin-left: auto;
+    margin-right: auto;
+}
+h2.alpha
+{
+    position: absolute;
+    left: 90px;
+    top: 112px;
+    color: brown;
+    font-size: 16px;
+
+}
+div.wrapper
+{
+}
+div.topstrip
+{
+    position: absolute;width: 100%; height: 30px;background: rgba(32, 6, 10, 0.19);top:0px;
+}
+div.header{
+    width: 250px;
+    position:absolute;
+
+}
+div.content {
+    margin-top: 30px;
+    padding: 10px;
+    background: transparent;
+    margin-left: 250px;
+}
+table.footer{
+    text-align: center;
+    font-size: small;
+    width:  100%;
+    line-height: 50px;
+    background: rgba(5, 3, 3, 0.28);
+}
+td.footerleft
+{
+    width: 250px;
+}
+img.logo {
+    display: block;
+    width: 194px;
+    height: 120px;
+    border:none;
+    padding: 10px 0px 0px 20px;
+}
+img.clickable
+{
+    cursor: pointer;
+}
+img.clickable:hover
+{
+}
+div.centercontent {
+    text-align: center
+}
+div.standalonemessage
+{
+    margin-top: 100px;
+    text-align: center;
+    font-size: 20px;
+}
+div.menucontainer{
+    margin-left: auto;
+    margin-right: auto;
+}
+div.menucontainer ul{
+    list-style-type: none;
+    margin: 30px 0px 0px 0px;
+}
+div.welcomeuser
+{
+    text-align: center;
+    color: green;
+    margin-top: 50px;
+}
+div.menucontainer a{
+
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 0px;
+    padding-top: 0px;
+}
+html{
+}
+body {
+    margin: 0px;
+    text-align: justify;
+    font-family: Arial, Helvetica, sans-serif;
+    color: white;
+    background :url("../img/bgbody.jpg");
+}
+
+
+span.info {
+    color: green;
+}
+
+span.error {
+    color: red;
+}
+
+.selectlist-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.selectlist-item {
+    background: #fff url(../img/delete.png) no-repeat left center;
+    border-left: solid 1px #eee;
+    border-top: solid 1px #eee;
+    border-right: solid 2px #ccc;
+    border-bottom: solid 2px #ccc;
+    cursor: pointer;
+    padding: 0.2em 2.0em;
+    margin: 1px 0;
+}
+
+.centered {
+    margin-left: auto;
+    margin-right: auto;
+}
+.content a:link { color: orange; }
+.content a:active { }
+.content a:visited { color:grey;}
+.content a:hover { }
+.footer a:link { color:wheat;}
+.footer a:visited  { color:grey;}
+.selectlist-list {
+    color:black;
+}
