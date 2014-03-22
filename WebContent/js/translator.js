@@ -249,21 +249,24 @@ function Translator() {
     };
     function FlashAnimator(e)
     {
-        var flashingPeriod = 400;
+        var flashingPeriod = 350;
         var el = e;
         var stopped = false;
+        var timer = null;
         this.stop = function() {
             stopped = true;
-        }
+            clearTimeout(timer);
+            el.removeClass("jsb_translateCurrent");
+        };
         function pulse()
         {
             //la aggiungo e la rimuovo
             el.switchClass("dummy", "jsb_translateCurrent", flashingPeriod, null, function() {
-                el.switchClass("jsb_translateCurrent", "dummy", flashingPeriod)
+                el.switchClass("jsb_translateCurrent", "dummy", flashingPeriod);
             });
             //se non mi devo fermare, richiamo il metodo ricorsivamente
             if (!stopped)
-                setTimeout(pulse, flashingPeriod * 2);
+                timer = setTimeout(pulse, flashingPeriod * 2);
         }
 
         pulse();
