@@ -28,7 +28,8 @@ import javax.xml.transform.stream.StreamResult;
 import jsbabel.DataHelper;
 import jsbabel.Helper;
 import jsbabel.ProcedureController;
-import jsbabel.SiteStringExtractor;
+import jsbabel.PageParser;
+import jsbabel.PageStringExtractor;
 import jsbabel.entities.BaseString;
 import jsbabel.entities.Page;
 import jsbabel.entities.Parsedsite;
@@ -244,7 +245,7 @@ public class Test extends HttpServlet {
                 return true;
             }
             ProcedureController controller = new ProcedureController();
-            SiteStringExtractor ex = new SiteStringExtractor(null, controller, request.getSession());
+            PageStringExtractor ex = new PageStringExtractor(null, controller, request.getSession());
 
             URL u = new URL(url);
             Criteria c = dh.getHSession().createCriteria(Parsedsite.class).add(Restrictions.eq("host", u.getHost()));

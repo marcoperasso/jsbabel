@@ -318,7 +318,8 @@ public final class Helper {
     }
 
     public static void log(Exception e, HttpSession session) {
-        log.severe(getStackTrace(e));
+        if (log != null)
+            log.severe(getStackTrace(e));
         if (session != null) {
             getErrors(session).add(e);
         }

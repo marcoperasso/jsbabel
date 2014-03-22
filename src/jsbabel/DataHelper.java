@@ -61,17 +61,23 @@ public class DataHelper {
             return;
         }
         if (transactionLevel == 0) {
-            transaction.commit();
+            try {
+                transaction.commit();
+            } catch (Exception ex) {
+                transaction.rollback();
+                transactionAborted = true;
+                throw ex;
+            }
         }
     }
 
     public void rollback() throws Exception {
+        if (transactionAborted) {
+            return;
+        }
         transactionLevel--;
         if (transactionLevel < 0) {
             throw new Exception("commit or rollback called more times than beginTransaction");
-        }
-        if (transactionAborted) {
-            return;
         }
         transaction.rollback();
         transactionAborted = true;
@@ -375,7 +381,6 @@ public class DataHelper {
         Type[] types = {LongType.INSTANCE, LongType.INSTANCE};
         try {
 
-
             Criteria c = getHSession()
                     .createCriteria(BaseString.class)
                     .add(Restrictions.sqlRestriction(where, parms, types));
@@ -500,7 +505,6 @@ public class DataHelper {
                 }
                 p.getBaseStrings().clear();
 
-
                 pages.remove(p);
                 return;
             }
@@ -576,7 +580,6 @@ public class DataHelper {
             getHSession().update(site);
             site.increaseTranslationVersion();
 
-
         } catch (Exception e) {
             rollback();
             throw e;
@@ -587,8 +590,8 @@ public class DataHelper {
     public void addDemoTrial(String src, DemoTrial.TrialType type) throws HibernateException, ClassNotFoundException, Exception {
         beginTransaction();
         Criteria c = getHSession().createCriteria(DemoTrial.class);
-                c.add(Restrictions.eq("page", src))
-                        .add(Restrictions.eq("trialType", type));
+        c.add(Restrictions.eq("page", src))
+                .add(Restrictions.eq("trialType", type));
         DemoTrial dt = (DemoTrial) c.uniqueResult();
         if (dt == null) {
             dt = new DemoTrial();
@@ -745,8 +748,6 @@ public class DataHelper {
                     setTranslations(req.getSession(), tt, siteUrl, "en-us", false);
                 }
             }
-
-
 
             beginTransaction();
             Page p = new Page();

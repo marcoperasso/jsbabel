@@ -1,13 +1,8 @@
 package jsbabel.servlet;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,22 +11,26 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathExpressionException;
 import jsbabel.CommandData;
 import jsbabel.Const;
 import jsbabel.DataHelper;
+import jsbabel.HTMLGenerator;
 import jsbabel.Helper;
 import jsbabel.Messages;
 import jsbabel.ProcedureController;
-import jsbabel.SiteStringExtractor;
+import jsbabel.PageParser;
+import jsbabel.PageStringExtractor;
 import jsbabel.entities.Page;
 import jsbabel.entities.Site;
 import jsbabel.entities.User;
@@ -40,6 +39,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 
 /**
@@ -134,7 +134,7 @@ public class SiteManager extends HttpServlet {
                 }
             } else if ("importxliff".equals(cmd)) {
                 XLiffGenerator gen = new XLiffGenerator();
-                
+
                 FileItemFactory factory = new DiskFileItemFactory();
                 ServletFileUpload upload = new ServletFileUpload(factory);
                 List<FileItem> items = upload.parseRequest(request); // This line is where it died.
@@ -148,8 +148,9 @@ public class SiteManager extends HttpServlet {
                             ZipEntry entry = null;
                             while ((entry = zis.getNextEntry()) != null) {
                                 String name = entry.getName();
-                                if (!name.toLowerCase().endsWith(".xlf"))
-                                     throw new ServletException(String.format(Messages.INVALID_IMPORT_FILE, name, ".xlf"));
+                                if (!name.toLowerCase().endsWith(".xlf")) {
+                                    throw new ServletException(String.format(Messages.INVALID_IMPORT_FILE, name, ".xlf"));
+                                }
                                 gen.importStream(zis);
                             }
                         } else {
@@ -158,7 +159,7 @@ public class SiteManager extends HttpServlet {
 
                     }
                 }
-            } else if ("exportxliff".equals(cmd)) {
+            } else if ("export".equals(cmd)) {
                 final String sessionId = request.getParameter(Const.SessionIdParam);
                 ProcedureController controller = new ProcedureController();
                 //controllo che l'utente sia connesso
@@ -183,9 +184,7 @@ public class SiteManager extends HttpServlet {
                     String targetLocale = request.getParameter("targetlocale");
                     response.setContentType("application/zip");
                     response.setHeader("Content-Disposition", "attachment;filename=" + bareHost + '.' + targetLocale + ".zip");
-                    XLiffGenerator creator = new XLiffGenerator();
-                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                    Transformer transformer = transformerFactory.newTransformer();
+                    final boolean exportHtml = "html".equals(request.getParameter("format"));
                     for (String ids : pageIds) {
                         Long id = Long.parseLong(ids);
                         for (Page p : pages) {
@@ -199,24 +198,17 @@ public class SiteManager extends HttpServlet {
                                     sb.append('.');
                                     sb.append(page);
                                 }
-                                sb.append(".xlf");
+                                sb.append(exportHtml ? ".html" : ".xlf");
                                 dh.reattach(p);
 
                                 ZipEntry ze = new ZipEntry(sb.toString());
                                 try {
                                     zos.putNextEntry(ze);
-                                    creator.setTranslations(p.getTranslations(targetLocale, true));
-                                    Document doc = plain
-                                            ? creator.createDocument(sUrl, site.getBaseLanguage(), targetLocale)
-                                            : creator.parse(sUrl, site.getBaseLanguage(), targetLocale);
-                                    creator.applyTranslations();
-                                    DOMSource source = new DOMSource(doc);
-                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                    StreamResult result = new StreamResult(baos);
-                                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                                    transformer.transform(source, result);
-                                    zos.write(baos.toByteArray());
-                                    baos.close();
+                                    if (exportHtml) {
+                                        generateHTML(controller, p, targetLocale, plain, sUrl, zos);
+                                    } else {
+                                        generateXLiff(p, site.getBaseLanguage(), targetLocale, plain, sUrl, zos);
+                                    }
 
                                 } catch (Exception ex) {
                                     controller.log(ex.getLocalizedMessage(), Level.SEVERE);
@@ -240,7 +232,7 @@ public class SiteManager extends HttpServlet {
                 Site site = checkValidSite(request);
 
                 request.getSession().setAttribute(sessionId, controller);
-                SiteStringExtractor sp = new SiteStringExtractor(site, controller, request.getSession());
+                PageStringExtractor sp = new PageStringExtractor(site, controller, request.getSession());
                 try {
                     if ("refresh".equals(cmd)) {
                         String[] pageIds = request.getParameterValues("pages[]");
@@ -279,7 +271,6 @@ public class SiteManager extends HttpServlet {
                         URL url = new URL(src);
                         sp.parse(url, true);
 
-
                     }
                 } catch (Exception ex) {
                     controller.log(ex.getLocalizedMessage(), Level.SEVERE);
@@ -289,13 +280,44 @@ public class SiteManager extends HttpServlet {
                     sp.dispose();
                 }
 
-
             }
 
             CommandData.sendOK(response.getWriter());
         } catch (Exception ex) {
             CommandData.sendError(ex, response.getWriter());
         }
+    }
+
+    private void generateHTML(ProcedureController controller, Page p, String targetLocale, boolean plain, final String sUrl, ZipOutputStream zos) throws IOException, DOMException, TransformerException, ParserConfigurationException, XPathExpressionException, IllegalArgumentException {
+        HTMLGenerator creator = new HTMLGenerator(controller);
+        creator.setTranslations(p.getTranslations(targetLocale, true));
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintWriter result = new PrintWriter(baos);
+        org.jsoup.nodes.Document doc = creator.parse(sUrl);
+        result.write(doc.html());
+        result.flush();
+        zos.write(baos.toByteArray());
+        result.close();
+        baos.close();
+    }
+
+    private void generateXLiff(Page p, String baseLocale, String targetLocale, boolean plain, final String sUrl, ZipOutputStream zos) throws IOException, DOMException, TransformerException, ParserConfigurationException, XPathExpressionException, IllegalArgumentException {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        XLiffGenerator creator = new XLiffGenerator();
+        creator.setTranslations(p.getTranslations(targetLocale, true));
+        Document doc = plain
+                ? creator.createDocument(sUrl, baseLocale, targetLocale)
+                : creator.parse(sUrl, baseLocale, targetLocale);
+        creator.applyTranslations();
+        DOMSource source = new DOMSource(doc);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        StreamResult result = new StreamResult(baos);
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.transform(source, result);
+        zos.write(baos.toByteArray());
+        baos.close();
     }
 
     private Site checkValidSite(HttpServletRequest request) throws ServletException, NumberFormatException {
@@ -310,5 +332,4 @@ public class SiteManager extends HttpServlet {
         return site;
     }
 
-    
 }

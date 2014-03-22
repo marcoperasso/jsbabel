@@ -65,11 +65,12 @@
             .checkboxes
             {
                 text-align: right;
-                width:65px;
+                width:90px;
             }
             .toolbar
             {
                 padding: 20px;
+                text-align: left;
             } 
             .toolbar img
             {
@@ -150,14 +151,21 @@
                 <a href="javascript:void()" class="includebutton clickable" title="Include selected pages or text blocks in translation"><img src="img/translate.png"></a>
                 <a href="javascript:void()" class="ignorebutton clickable" title="Exclude selected pages or text blocks from translation"><img src="img/notranslate.png"></a>
                 <a href="javascript:void()" class="exportxliffbutton clickable" title="Export selected pages in XLIFF format"><img src="img/exportxliff.png"></a>
-                <a href="javascript:void()" class="importxliffbutton clickable" title="Import XLIFF files"><img src="img/importxliff.png"></a>
+                <!--                <a href="javascript:void()" class="importxliffbutton clickable" title="Import XLIFF files"><img src="img/importxliff.png"></a>-->
+                <a href="javascript:void()" class="exporthtmlbutton clickable" title="Export selected pages in HTML format"><img src="img/exporthtml.png"></a>
+                <a href="javascript:void()" class="importhtmlbutton clickable" title="Import HTML files"><img src="img/importhtml.png"></a>
                 <a href="javascript:void()" class="deletebutton clickable" title="Delete selected pages or text blocks (only if they are not translated)"><img src="img/deletebig.png"></a>
                 <fieldset>
                     <legend>I want to hide:</legend>
-                    <input type="checkbox" class="filter" id="ignore"><span>Text excluded from translation</span>
-                    <input type="checkbox" class="filter" id="notignore"><span>Text to translate</span>
-                    <input type="checkbox" class="filter" id="translated"><span>Translated text</span>
-                    <input type="checkbox" class="filter" id="nottranslated"><span>Non yet translated text</span>
+                    <table>
+                        <tr>
+                            <td><input type="checkbox" class="filter" id="ignore">Text excluded from translation</td>
+                            <td><input type="checkbox" class="filter" id="notignore">Text to translate</td></tr>
+                        <tr>
+                            <td><input type="checkbox" class="filter" id="translated">Translated text</td>
+                            <td><input type="checkbox" class="filter" id="nottranslated">Non yet translated text</td></tr>
+                    </table>                   
+
                 </fieldset>
                 <div class="generationoutput"></div>
             </div>
@@ -207,6 +215,13 @@
             <form>
                 <fieldset class="centered">
                     <input type="checkbox" name="alsohtml" id="alsohtml" />Include HTML tags
+                </fieldset>
+            </form>
+        </div>
+        <div id="htmlexportform" title="Export in HTML format" class="messagedialog">
+            <form>
+                <fieldset class="centered">
+                    <input type="checkbox" checked="checked" name="translationinfo" id="translationinfo" />Include information to re-import translated files
                 </fieldset>
             </form>
         </div>

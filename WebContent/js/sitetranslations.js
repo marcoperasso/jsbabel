@@ -177,6 +177,31 @@ $(function() {
                 $(this).dialog("close");
         }
     });
+    $("#htmlexportform").dialog({
+        autoOpen: false,
+        width: 400,
+        modal: true,
+        buttons: {
+            Export: function() {
+                $(this).dialog("close");
+                startHTMLExport(this);
+            },
+            Cancel: function() {
+                $(this).dialog("close");
+            }
+        },
+        close: function() {
+
+        }
+    }).keydown(function(e) {
+        if (e.keyCode === 13)
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).dialog("close");
+            startHTMLExport(this);
+        }
+    });
 
     var refreshParser = new ProcedureController(".refreshbutton", ".generationoutput", "/servlet/siteParser");
     refreshParser.setFinish(function() {
@@ -184,7 +209,7 @@ $(function() {
     });
     refreshParser.setBeforeStarting(function() {
         var pages = getSelectedPages();
-        if (pages.length == 0)
+        if (pages.length === 0)
         {
             alert(sNoSelectedPages);
             return false;
@@ -237,6 +262,38 @@ $(function() {
     xliffExporter.setBeforeStopping(function() {
         return confirm(sConfirmStop);
     });
+
+    var htmlExporter = new ProcedureController(".exporthtmlbutton", "", "/servlet/siteParser");
+    htmlExporter.setDownloadOutput(true);
+    htmlExporter.setBeforeStarting(function() {
+        var pages = getSelectedPages();
+        if (pages.length === 0)
+        {
+            alert(sNoSelectedPages);
+            return false;
+        }
+        $("#htmlexportform").dialog("open");
+
+        return false;
+    });
+    htmlExporter.setBeforeStopping(function() {
+        return confirm(sConfirmStop);
+    });
+    function startHTMLExport(form)
+    {
+        var plain = !$("#translationinfo", form).is(':checked');
+        htmlExporter.setProcedureData(
+                {
+                    "siteid": getSiteId(),
+                    "plain": plain,
+                    "format": "html",
+                    "cmd": "export",
+                    "src": getHost(),
+                    "targetlocale": getTargetLocale(),
+                    "pages": getSelectedPages()
+                });
+        htmlExporter.procedure();
+    }
     function startXLiffImport(form)
     {
         var ext = $('#filetoupload').val().split('.').pop().toLowerCase();
@@ -254,7 +311,8 @@ $(function() {
                 {
                     "siteid": getSiteId(),
                     "plain": plain,
-                    "cmd": "exportxliff",
+                    "format": "xliff",
+                    "cmd": "export",
                     "src": getHost(),
                     "targetlocale": getTargetLocale(),
                     "pages": getSelectedPages()
@@ -283,18 +341,18 @@ $(function() {
                 jDiv.html(data);
                 $(".stringselector", jDiv)
                         .change(function() {
-                    if (!$(this).is(':checked'))
-                    {
-                        $(".multistringselector", $(this).closest(".page")).attr("checked", false);
-                    }
+                            if (!$(this).is(':checked'))
+                            {
+                                $(".multistringselector", $(this).closest(".page")).attr("checked", false);
+                            }
 
-                });
+                        });
                 applyFilter(jDiv);
 
                 $(".multistringselector", jDiv)
                         .change(function() {
-                    $(".stringselector", $(this).closest(".page")).attr("checked", $(this).is(':checked'));
-                });
+                            $(".stringselector", $(this).closest(".page")).attr("checked", $(this).is(':checked'));
+                        });
                 $("td.targetstring", jDiv).mousedown(function(e) {
                     var jTD = $(this);
                     if (jTD.closest("tr").hasClass("ignore"))

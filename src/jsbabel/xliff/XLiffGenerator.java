@@ -28,7 +28,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import jsbabel.Const;
 import jsbabel.Helper;
-import jsbabel.SiteStringExtractor;
+import jsbabel.PageParser;
 import jsbabel.Translation;
 import jsbabel.Translations;
 import jsbabel.entities.StringType;
@@ -56,183 +56,9 @@ public class XLiffGenerator implements NodeVisitor {
     private static final String toolId = "JSBABEL";
     private static final String toolName = "JSBABEL";
     private static final String toolVersion = "1.0";
-    private static final String toolCompany = "Marco Perasso";
+    private static final String toolCompany = "Smart Pointer";
     private Integer tuId = 0;
 
-    private String getNewTranslationUnitId() {
-        return (tuId++).toString();
-    }
-
-    private void processElement(XLiffElement xEl, org.jsoup.nodes.Node node, boolean parentTU) throws DOMException {
-        Element outerEl, innerEl;
-        switch (currentLevel.state) {
-            case SIMPLETU:
-            case ATTRIBUTETU:
-                if (parentTU) {
-                    outerEl = document.createElement(currentLevel.state == State.SIMPLETU ? "g" : "ph");
-                    outerEl.setAttribute("id", getNewTranslationUnitId());
-                    innerEl = outerEl;
-                    outerEl.setAttribute(xEl.inline ? "ctype" : "restype", "x-html-" + node.nodeName()/* xEl.resType*/);
-                } else {
-                    outerEl = document.createElement("trans-unit");
-                    outerEl.setAttribute("id", getNewTranslationUnitId());
-                    innerEl = (Element) outerEl.appendChild(document.createElement("source"));
-                    outerEl.setAttribute("restype", "x-html-" + node.nodeName()/*xEl.resType*/);
-                }
-
-                break;
-            default:
-                if (parentTU) {
-                    if (currentLevel.TUNodes.isEmpty()) {
-                        outerEl = document.createElement("x");
-                        outerEl.setAttribute("id", getNewTranslationUnitId());
-                        innerEl = outerEl;
-                        outerEl.setAttribute("ctype", "x-html-" + node.nodeName()/*xEl.resType*/);
-                    } else {
-                        outerEl = document.createElement("g");
-                        outerEl.setAttribute("id", getNewTranslationUnitId());
-                        innerEl = outerEl;
-                        outerEl.setAttribute("ctype", "x-html-" + node.nodeName()/*xEl.resType*/);
-                    }
-                } else {
-                    outerEl = document.createElement("group");
-                    innerEl = outerEl;
-                    outerEl.setAttribute("restype", "x-html-" + node.nodeName()/*xEl.resType*/);
-                }
-
-
-        }
-
-        for (org.jsoup.nodes.Attribute attr : node.attributes()) {
-            if (SiteStringExtractor.isAttributeToTranslate((org.jsoup.nodes.Element) node, attr)) {
-                String base = Helper.prepareBaseString(attr.getValue());
-                if (!isBaseStringToIgnore(base)) {
-                    //non sono in uno stato di translate unit:
-                    //allora devo creare una TU ad hoc
-                    if (currentLevel.state != State.ATTRIBUTETU && currentLevel.state != State.SIMPLETU && !parentTU) {
-                        Element tu = (Element) innerEl.appendChild(document.createElement("trans-unit"));
-                        tu.setAttribute("id", getNewTranslationUnitId());
-                        tu.setAttribute("restype", "x-html-" + node.nodeName() + "-" + attr.getKey());
-                        Element source = (Element) tu.appendChild(document.createElement("source"));
-                        source.appendChild(document.createTextNode(base));
-
-                    } else {
-                        Element parentOfSub = innerEl;
-                        if (!"ph".equals(parentOfSub.getNodeName())) {
-                            parentOfSub = (Element) parentOfSub.appendChild(document.createElement("ph"));
-                            parentOfSub.setAttribute("id", getNewTranslationUnitId());
-                        }
-                        Element sub = (Element) parentOfSub.appendChild(document.createElement("sub"));
-                        sub.appendChild(document.createTextNode(base));
-                        sub.setAttribute("ctype", "x-html-" + node.nodeName() + "-" + attr.getKey());
-                    }
-                    continue;
-                }
-            }
-            outerEl.setAttribute("html:" + attr.getKey(), attr.getValue());
-        }
-
-        //ogni nodo viene creato in due versioni, perché non so se alla fine avrò una TU in cui inserirlo oppure no
-        //lo so in questo momento, in cui faccio il travaso: se sono in stato di TU, devo travasare quelli per il TU, altrimenti gli altri
-        List<InnerNode> list = isTUContext(currentLevel)
-                ? currentLevel.TUNodes
-                : currentLevel.nonTUNodes;
-
-        InnerNode newNode = new InnerNode(innerEl, outerEl, xEl);
-        for (InnerNode n : list) {
-            newNode.add(n);
-            //innerEl.appendChild(n.node);
-        }
-        //li aggiungo sempre in entrambe le liste, ad eccezione di questo punto in cui travaso i 
-        (parentTU ? currentLevel.parentLevel.TUNodes : currentLevel.parentLevel.nonTUNodes)
-                .add(newNode);
-    }
-
-    private boolean isTUContext(NodeLevel level) {
-        if (level.state == State.ATTRIBUTETU || level.state == State.SIMPLETU) {
-            return true;
-        }
-        return (level.parentLevel == null) ? false : isTUContext(level.parentLevel);
-    }
-
-    /**
-     * @return the translations
-     */
-    public Translations getTranslations() {
-        return translations;
-    }
-
-    /**
-     * @param translations the translations to set
-     */
-    public void setTranslations(Translations translations) {
-        this.translations = translations;
-    }
-
-    private boolean isBaseStringToIgnore(String base) {
-        return (translations != null)
-                ? translations.isBaseStringToIgnore(base)
-                : Helper.isBaseStringToIgnore(base);
-    }
-
-    public void importStream(InputStream inputStream) {
-        try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] buff = new byte[1024];
-            int read;
-            while ((read = inputStream.read(buff)) > 0) {
-                baos.write(buff, 0, read);
-            }
-            document = db.parse(new ByteArrayInputStream(baos.toByteArray()));
-            String originalFile = document.getDocumentElement().getAttribute("original");
-            String baseLanguage = document.getDocumentElement().getAttribute("source-language");
-            String targetLanguage = document.getDocumentElement().getAttribute("target-language");
-            XPathFactory xPathFactory = XPathFactory.newInstance();
-            XPath xPath = xPathFactory.newXPath();
-            XPathExpression xPathExpression = xPath.compile("//trans-unit");
-            NodeList nodes = (NodeList) xPathExpression.evaluate(document, XPathConstants.NODESET);
-            //XPathExpression xPathExpressionSource = xPath.compile("source/descendant::sub");
-            //XPathExpression xPathExpressionTarget = xPath.compile("target/descendant::sub");
-            XPathExpression sourceExpr = xPath.compile("source");
-            XPathExpression targetExpr = xPath.compile("target");
-            sourceNodesLoop:
-            for (int i = 0; i < nodes.getLength(); i++) {
-                Element tu = (Element) nodes.item(i);
-
-                Element targetNode = (Element) targetExpr.evaluate(tu, XPathConstants.NODESET);
-                if (targetNode == null) {
-                    continue;
-                }
-                Element sourceNode = (Element) sourceExpr.evaluate(tu, XPathConstants.NODESET);
-                if (sourceNode == null) {
-                    continue;
-                }
-                NodeList sourceChildNodes = sourceNode.getChildNodes();
-                NodeList targetChildNodes = targetNode.getChildNodes();
-                int targetIdx = 0;
-                for (int x = 0; x < sourceChildNodes.getLength(); x++) {
-                    if (targetIdx > targetChildNodes.getLength()) {
-                        break sourceNodesLoop;
-                    }
-                    Node sourceChild = sourceChildNodes.item(x);
-                    Node targetChild = targetChildNodes.item(targetIdx);
-                    if (sourceChild instanceof Text && targetChild instanceof Text) {
-                        translations.add(((Text) sourceChild).getNodeValue(), ((Text) targetChild).getNodeValue(), false, StringType.Text);
-                        targetIdx++;
-                    }
-
-
-                    /*if (targetChild.getLocalName()) {
-                    }*/
-                }
-
-            }
-        } catch (Exception ex) {
-            Helper.log(ex);
-        }
-    }
 
     class InnerNode {
 
@@ -307,6 +133,175 @@ public class XLiffGenerator implements NodeVisitor {
     public XLiffGenerator() {
     }
 
+    private String getNewTranslationUnitId() {
+        return (tuId++).toString();
+    }
+
+    private void processElement(XLiffElement xEl, org.jsoup.nodes.Node node, boolean parentTU) throws DOMException {
+        Element outerEl, innerEl;
+        switch (currentLevel.state) {
+            case SIMPLETU:
+            case ATTRIBUTETU:
+                if (parentTU) {
+                    outerEl = document.createElement(currentLevel.state == State.SIMPLETU ? "g" : "ph");
+                    outerEl.setAttribute("id", getNewTranslationUnitId());
+                    innerEl = outerEl;
+                    outerEl.setAttribute(xEl.inline ? "ctype" : "restype", "x-html-" + node.nodeName()/* xEl.resType*/);
+                } else {
+                    outerEl = document.createElement("trans-unit");
+                    outerEl.setAttribute("id", getNewTranslationUnitId());
+                    innerEl = (Element) outerEl.appendChild(document.createElement("source"));
+                    outerEl.setAttribute("restype", "x-html-" + node.nodeName()/*xEl.resType*/);
+                }
+
+                break;
+            default:
+                if (parentTU) {
+                    if (currentLevel.TUNodes.isEmpty()) {
+                        outerEl = document.createElement("x");
+                        outerEl.setAttribute("id", getNewTranslationUnitId());
+                        innerEl = outerEl;
+                        outerEl.setAttribute("ctype", "x-html-" + node.nodeName()/*xEl.resType*/);
+                    } else {
+                        outerEl = document.createElement("g");
+                        outerEl.setAttribute("id", getNewTranslationUnitId());
+                        innerEl = outerEl;
+                        outerEl.setAttribute("ctype", "x-html-" + node.nodeName()/*xEl.resType*/);
+                    }
+                } else {
+                    outerEl = document.createElement("group");
+                    innerEl = outerEl;
+                    outerEl.setAttribute("restype", "x-html-" + node.nodeName()/*xEl.resType*/);
+                }
+
+
+        }
+
+        for (org.jsoup.nodes.Attribute attr : node.attributes()) {
+            if (PageParser.isAttributeToTranslate((org.jsoup.nodes.Element) node, attr)) {
+                String base = Helper.prepareBaseString(attr.getValue());
+                if (!isBaseStringToIgnore(base)) {
+                    //non sono in uno stato di translate unit:
+                    //allora devo creare una TU ad hoc
+                    if (currentLevel.state != State.ATTRIBUTETU && currentLevel.state != State.SIMPLETU && !parentTU) {
+                        Element tu = (Element) innerEl.appendChild(document.createElement("trans-unit"));
+                        tu.setAttribute("id", getNewTranslationUnitId());
+                        tu.setAttribute("restype", "x-html-" + node.nodeName() + "-" + attr.getKey());
+                        Element source = (Element) tu.appendChild(document.createElement("source"));
+                        source.appendChild(document.createTextNode(base));
+
+                    } else {
+                        Element parentOfSub = innerEl;
+                        if (!"ph".equals(parentOfSub.getNodeName())) {
+                            parentOfSub = (Element) parentOfSub.appendChild(document.createElement("ph"));
+                            parentOfSub.setAttribute("id", getNewTranslationUnitId());
+                        }
+                        Element sub = (Element) parentOfSub.appendChild(document.createElement("sub"));
+                        sub.appendChild(document.createTextNode(base));
+                        sub.setAttribute("ctype", "x-html-" + node.nodeName() + "-" + attr.getKey());
+                    }
+                    continue;
+                }
+            }
+            outerEl.setAttribute("html:" + attr.getKey(), attr.getValue());
+        }
+
+        //ogni nodo viene creato in due versioni, perché non so se alla fine avrò una TU in cui inserirlo oppure no
+        //lo so in questo momento, in cui faccio il travaso: se sono in stato di TU, devo travasare quelli per il TU, altrimenti gli altri
+        List<InnerNode> list = isTUContext(currentLevel)
+                ? currentLevel.TUNodes
+                : currentLevel.nonTUNodes;
+
+        InnerNode newNode = new InnerNode(innerEl, outerEl, xEl);
+        for (InnerNode n : list) {
+            newNode.add(n);
+            //innerEl.appendChild(n.node);
+        }
+        //li aggiungo sempre in entrambe le liste, ad eccezione di questo punto in cui travaso i 
+        (parentTU ? currentLevel.parentLevel.TUNodes : currentLevel.parentLevel.nonTUNodes)
+                .add(newNode);
+    }
+
+    private boolean isTUContext(NodeLevel level) {
+        if (level.state == State.ATTRIBUTETU || level.state == State.SIMPLETU) {
+            return true;
+        }
+        return (level.parentLevel == null) ? false : isTUContext(level.parentLevel);
+    }
+
+   
+
+    /**
+     * @param translations the translations to set
+     */
+    public void setTranslations(Translations translations) {
+        this.translations = translations;
+    }
+
+    private boolean isBaseStringToIgnore(String base) {
+        return (translations != null)
+                ? translations.isBaseStringToIgnore(base)
+                : Helper.isBaseStringToIgnore(base);
+    }
+
+    public void importStream(InputStream inputStream) {
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buff = new byte[1024];
+            int read;
+            while ((read = inputStream.read(buff)) > 0) {
+                baos.write(buff, 0, read);
+            }
+            document = db.parse(new ByteArrayInputStream(baos.toByteArray()));
+            String originalFile = document.getDocumentElement().getAttribute("original");
+            String baseLanguage = document.getDocumentElement().getAttribute("source-language");
+            String targetLanguage = document.getDocumentElement().getAttribute("target-language");
+            XPathFactory xPathFactory = XPathFactory.newInstance();
+            XPath xPath = xPathFactory.newXPath();
+            XPathExpression xPathExpression = xPath.compile("//trans-unit");
+            NodeList nodes = (NodeList) xPathExpression.evaluate(document, XPathConstants.NODESET);
+            //XPathExpression xPathExpressionSource = xPath.compile("source/descendant::sub");
+            //XPathExpression xPathExpressionTarget = xPath.compile("target/descendant::sub");
+            XPathExpression sourceExpr = xPath.compile("source");
+            XPathExpression targetExpr = xPath.compile("target");
+            sourceNodesLoop:
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Element tu = (Element) nodes.item(i);
+
+                Element targetNode = (Element) targetExpr.evaluate(tu, XPathConstants.NODESET);
+                if (targetNode == null) {
+                    continue;
+                }
+                Element sourceNode = (Element) sourceExpr.evaluate(tu, XPathConstants.NODESET);
+                if (sourceNode == null) {
+                    continue;
+                }
+                NodeList sourceChildNodes = sourceNode.getChildNodes();
+                NodeList targetChildNodes = targetNode.getChildNodes();
+                int targetIdx = 0;
+                for (int x = 0; x < sourceChildNodes.getLength(); x++) {
+                    if (targetIdx > targetChildNodes.getLength()) {
+                        break sourceNodesLoop;
+                    }
+                    Node sourceChild = sourceChildNodes.item(x);
+                    Node targetChild = targetChildNodes.item(targetIdx);
+                    if (sourceChild instanceof Text && targetChild instanceof Text) {
+                        translations.add(((Text) sourceChild).getNodeValue(), ((Text) targetChild).getNodeValue(), false, StringType.Text);
+                        targetIdx++;
+                    }
+
+
+                    /*if (targetChild.getLocalName()) {
+                    }*/
+                }
+
+            }
+        } catch (Exception ex) {
+            Helper.log(ex);
+        }
+    }
     public Document parse(File file, String charsetName, String sourceLanguage) throws IOException, ParserConfigurationException {
         org.jsoup.nodes.Document doc = Jsoup.parse(file, charsetName);
         return parse(doc, file.getPath(), sourceLanguage, null);
@@ -441,7 +436,7 @@ public class XLiffGenerator implements NodeVisitor {
             currentLevel.name = node.nodeName();
 
             for (org.jsoup.nodes.Attribute attr : node.attributes()) {
-                if (SiteStringExtractor.isAttributeToTranslate((org.jsoup.nodes.Element) node, attr)) {
+                if (PageParser.isAttributeToTranslate((org.jsoup.nodes.Element) node, attr)) {
                     String base = Helper.prepareBaseString(attr.getValue());
                     if (isBaseStringToIgnore(base)) {
                         continue;

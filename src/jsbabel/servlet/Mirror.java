@@ -23,10 +23,8 @@ import jsbabel.DataHelper;
 import jsbabel.Helper;
 import jsbabel.Messages;
 import jsbabel.SiteMapGenerator;
-import jsbabel.SiteStringExtractor;
-import jsbabel.Translation;
+import jsbabel.PageParser;
 import jsbabel.Translations;
-import jsbabel.entities.StringType;
 import org.jsoup.nodes.Attribute;
 
 /**
@@ -104,7 +102,7 @@ public class Mirror extends HttpServlet {
                             Element currentNode = (Element) htmlNode;
 
                             for (Attribute attr : currentNode.attributes()) {
-                                if (SiteStringExtractor.isAttributeToTranslate(currentNode, attr)) {
+                                if (PageParser.isAttributeToTranslate(currentNode, attr)) {
                                     attr.setValue(translations.translate(attr.getValue(), true));
                                 }
                             }
