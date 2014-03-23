@@ -1,6 +1,10 @@
 package jsbabel;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -318,8 +322,9 @@ public final class Helper {
     }
 
     public static void log(Exception e, HttpSession session) {
-        if (log != null)
+        if (log != null) {
             log.severe(getStackTrace(e));
+        }
         if (session != null) {
             getErrors(session).add(e);
         }
@@ -356,19 +361,25 @@ public final class Helper {
     }
 
     public static void sendMail(String to, String subject, String body) {
-        String from = "info@jsbabel.com";
-        Properties props = new Properties();
-        props.put("mail.smtp.host", "mail.jsbabel.com");
-        // props.put("mail.smtp.socketFactory.port", "465");
-        // props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        props.put("mail.smtp.auth", "true");
-        //props.put("mail.smtp.port", "465");
 
+        Properties props = new Properties();
+        try {
+            InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("email.properties");
+            props.loadFromXML(resourceAsStream);
+            resourceAsStream.close();
+        } catch (Exception ex) {
+            Logger.getLogger(Helper.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
+        final String from = props.getProperty("sender_mail");
+        final String fromName = props.getProperty("sender_name");
+        final String pwd = props.getProperty("password");
         Session session = Session.getDefaultInstance(props,
                 new javax.mail.Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication("info@jsbabel.com", "lebabsj");
+                        return new PasswordAuthentication(from, pwd);
                     }
                 });
 
@@ -382,7 +393,7 @@ public final class Helper {
             MimeMessage message = new MimeMessage(session);
             // Set From: header field of the header.
             InternetAddress a = new InternetAddress(from);
-            a.setPersonal("JSBABEL");
+            a.setPersonal(fromName);
             message.setFrom(a);
             // Set To: header field of the header. 
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
@@ -431,7 +442,6 @@ public final class Helper {
                 Class c;
                 if (t instanceof java.lang.Thread) {
                     c = t.getClass();
-
 
                     while ((c != null) && (c != java.lang.Thread.class)) {
                         c = c.getSuperclass();
@@ -616,7 +626,7 @@ public final class Helper {
         try {
             return String.format("%040x", new BigInteger(string.getBytes("utf-8")));
         } catch (UnsupportedEncodingException ex) {
-           return string;
+            return string;
         }
     }
 }
