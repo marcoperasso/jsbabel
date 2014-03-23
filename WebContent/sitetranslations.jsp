@@ -222,6 +222,8 @@
             <form>
                 <fieldset class="centered">
                     <input type="checkbox" checked="checked" name="translationinfo" id="translationinfo" />Include information to re-import translated files
+                    <br>
+                    <input type="checkbox" name="translated" id="translated" />Apply existing translations
                 </fieldset>
             </form>
         </div>

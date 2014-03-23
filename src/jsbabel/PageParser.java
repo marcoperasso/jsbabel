@@ -47,7 +47,8 @@ public class PageParser implements NodeVisitor {
                 || "abbr".equalsIgnoreCase(name)
                 || "abbr".equalsIgnoreCase(name)
                 || "accesskey".equalsIgnoreCase(name)
-                || "label".equalsIgnoreCase(name)
+                || "label".equalsIgnoreCase(name) 
+                || "placeholder".equalsIgnoreCase(name)
                 || "prompt".equalsIgnoreCase(name)
                 || "standby".equalsIgnoreCase(name)
                 || "summary".equalsIgnoreCase(name)) {

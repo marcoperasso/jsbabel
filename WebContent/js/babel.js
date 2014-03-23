@@ -515,6 +515,7 @@ function Babel() {
                         || "abbr" === attr
                         || "accesskey" === attr
                         || "label" === attr
+                        || "placeholder" === attr
                         || "prompt" === attr
                         || "standby" === attr
                         || "summary" === attr)

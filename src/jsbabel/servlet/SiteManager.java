@@ -29,7 +29,6 @@ import jsbabel.HTMLGenerator;
 import jsbabel.Helper;
 import jsbabel.Messages;
 import jsbabel.ProcedureController;
-import jsbabel.PageParser;
 import jsbabel.PageStringExtractor;
 import jsbabel.entities.Page;
 import jsbabel.entities.Site;
@@ -165,6 +164,7 @@ public class SiteManager extends HttpServlet {
                 //controllo che l'utente sia connesso
                 Site site = checkValidSite(request);
                 boolean plain = "true".equals(request.getParameter("plain"));
+                boolean replaceTranslations = "true".equals(request.getParameter("translated"));
 
                 request.getSession().setAttribute(sessionId, controller);
                 DataHelper dh = new DataHelper();
@@ -205,7 +205,7 @@ public class SiteManager extends HttpServlet {
                                 try {
                                     zos.putNextEntry(ze);
                                     if (exportHtml) {
-                                        generateHTML(controller, p, targetLocale, plain, sUrl, zos);
+                                        generateHTML(controller, p, targetLocale, plain, replaceTranslations, sUrl, zos);
                                     } else {
                                         generateXLiff(p, site.getBaseLanguage(), targetLocale, plain, sUrl, zos);
                                     }
@@ -288,9 +288,14 @@ public class SiteManager extends HttpServlet {
         }
     }
 
-    private void generateHTML(ProcedureController controller, Page p, String targetLocale, boolean plain, final String sUrl, ZipOutputStream zos) throws IOException, DOMException, TransformerException, ParserConfigurationException, XPathExpressionException, IllegalArgumentException {
-        HTMLGenerator creator = new HTMLGenerator(controller);
-        creator.setTranslations(p.getTranslations(targetLocale, true));
+    private void generateHTML(
+            ProcedureController controller, 
+            Page p, 
+            String targetLocale, 
+            boolean plain,
+            boolean replaceTranslations, 
+            final String sUrl, ZipOutputStream zos) throws IOException, DOMException, TransformerException, ParserConfigurationException, XPathExpressionException, IllegalArgumentException {
+        HTMLGenerator creator = new HTMLGenerator(controller, p.getTranslations(targetLocale, true), !plain, replaceTranslations);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter result = new PrintWriter(baos);

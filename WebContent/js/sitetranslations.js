@@ -282,10 +282,12 @@ $(function() {
     function startHTMLExport(form)
     {
         var plain = !$("#translationinfo", form).is(':checked');
+        var translated = $("#translated", form).is(':checked');
         htmlExporter.setProcedureData(
                 {
                     "siteid": getSiteId(),
                     "plain": plain,
+                    "translated": translated,
                     "format": "html",
                     "cmd": "export",
                     "src": getHost(),
@@ -322,6 +324,10 @@ $(function() {
     $(".importxliffbutton").click(function()
     {
         $("#xliffimportform").dialog("open");
+    });
+    $(".importhtmlbutton").click(function()
+    {
+        alert(_jsb("Sorry, this functionality is not yet available!"));
     });
     $(".stringhandle").click(function()
     {
