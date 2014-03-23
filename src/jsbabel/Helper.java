@@ -484,6 +484,7 @@ public final class Helper {
     }
 
     public static void redirectForLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        
         String url = request.getRequestURL().toString();
         if (request.getQueryString() != null) {
             url += '?' + request.getQueryString();

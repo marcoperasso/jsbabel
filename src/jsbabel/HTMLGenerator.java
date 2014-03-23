@@ -35,10 +35,7 @@ public class HTMLGenerator extends PageParser {
     }
 
     public Document parse(String url) throws IOException, ParserConfigurationException {
-        Document doc = Jsoup.connect(url)
-                .userAgent(Const.UserAgent)
-                .referrer(Helper.getExecutingHost())
-                .get();
+        Document doc = connect(url);
         if (addTranslationInfo) {
             doc.getElementsByTag("html").attr("xmlns:jsb", "http://www.jsbabel.com/");
         }

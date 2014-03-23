@@ -101,7 +101,7 @@ public class SiteMapGenerator {
                             continue;
                         }
                         String url = s.getHost() + "/" + p.getPage();
-                        String id = Helper.hexEncode("/" + p.getPage());
+                        String id = Helper.hexEncode(url);
                         
                         map.put(url, id);
                         reverseMap.put(id, url);

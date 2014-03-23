@@ -32,6 +32,14 @@ public class PageParser implements NodeVisitor {
         visitedPages.add("mirror.jsp");
     }
 
+    protected org.jsoup.nodes.Document connect(String url) throws IOException {
+        org.jsoup.nodes.Document doc = Jsoup.connect(url)
+                .userAgent(Const.UserAgent)
+                .referrer(Helper.getExecutingHost())
+                .get();
+        return doc;
+    }
+
     public static boolean isAttributeToTranslate(Element currentNode, Attribute attr) {
         String name = attr.getKey();
         if ("alt".equalsIgnoreCase(name)
@@ -108,10 +116,7 @@ public class PageParser implements NodeVisitor {
     protected void traversePage(String sUrl) {
         Element node;
         try {
-            node = Jsoup.connect(sUrl)
-                    .userAgent(Const.UserAgent)
-                    .referrer(Helper.getExecutingHost())
-                    .get();
+            node = connect(sUrl);
             node.traverse(this);
         } catch (MalformedURLException e) {
             controller.log(e.getLocalizedMessage());

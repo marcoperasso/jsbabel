@@ -24,6 +24,7 @@ import jsbabel.Helper;
 import jsbabel.Messages;
 import jsbabel.SiteMapGenerator;
 import jsbabel.PageParser;
+import jsbabel.ProcedureController;
 import jsbabel.Translations;
 import org.jsoup.nodes.Attribute;
 
@@ -33,6 +34,78 @@ import org.jsoup.nodes.Attribute;
  */
 public class Mirror extends HttpServlet {
 
+    class MirrorGenerator extends PageParser {
+
+        private URL url;
+
+        public MirrorGenerator(ProcedureController controller) {
+            super(controller);
+        }
+
+        @Override
+        protected void processTextNode(TextNode text) {
+            if (skipContent(text.parent())) {
+                return;
+            }
+            if (text.text() != null) {
+                text.text(translations.translate(text.text(), true));
+            }
+        }
+
+        @Override
+        protected void processElement(Element currentNode) {
+
+            for (Attribute attr : currentNode.attributes()) {
+                if (PageParser.isAttributeToTranslate(currentNode, attr)) {
+                    attr.setValue(translations.translate(attr.getValue(), true));
+                }
+            }
+//                            if ("script".equals(currentNode.nodeName())) {
+//                                currentNode.empty();
+//                            } else 
+            if ("a".equals(currentNode.nodeName())) {
+                String addr = currentNode.attr("href");
+                if (addr != null) {
+                    try {
+                        URL u = new URL(url, addr);
+                        if (u.getHost().equals(url.getHost())) {
+                            if (isValidAddress(u)) {
+                                currentNode.attr("href", SiteMapGenerator.getDynamicUrl(targetLocale, u.toString(), true));
+                            } else {
+                                currentNode.attr("href", u.toString());
+                            }
+                        }
+
+                    } catch (MalformedURLException e) {
+                    }
+                }
+            }
+        }
+
+        String generate(String pageUrl) throws IOException {
+            Document document = connect(pageUrl);
+            url = new URL(pageUrl);
+            document.traverse(this);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("<base href=\"");
+            sb.append(Helper.getHost(url, true));
+            sb.append("\"></base>\n");
+            sb.append("<link rel=\"canonical\" href=\"");
+            sb.append(SiteMapGenerator.getDynamicUrl(targetLocale, pageUrl, true));
+            sb.append("\"/>");
+            if (!isBot) {
+                sb.append("<script type=\"text/javascript\">");
+                sb.append("window.location.href=\"");
+                sb.append(url);
+                sb.append("\"");
+                sb.append("</script>\n");
+            }
+            document.head().prepend(sb.toString());
+
+            return document.html();
+        }
+    }
     private static final String[] invalidExtensions = {".jpg", ".png", ".gif", ".tif", ".pdf", ".zip"};
     String url = null;
     String targetLocale = null;
@@ -40,9 +113,8 @@ public class Mirror extends HttpServlet {
     boolean isBot;
 
     /**
-     * Processes requests for both HTTP
-     * <code>GET</code> and
-     * <code>POST</code> methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
+     * methods.
      *
      * @param request servlet request
      * @param response servlet response
@@ -80,123 +152,14 @@ public class Mirror extends HttpServlet {
         }
     }
 
-    public String translate(String pageUrl, final String targetLocale) throws MalformedURLException {
-        final URL url = new URL(pageUrl);
-
-        try {
-
-            Document document = Jsoup.connect(url.toString())
-                    .userAgent(Const.UserAgent)
-                    .referrer(Helper.getExecutingHost())
-                    .get();
-
-            document.traverse(new NodeVisitor() {
-                @Override
-                public void head(Node htmlNode, int arg1) {
-                }
-
-                @Override
-                public void tail(Node htmlNode, int arg1) {
-                    try {
-                        if (htmlNode instanceof Element) {
-                            Element currentNode = (Element) htmlNode;
-
-                            for (Attribute attr : currentNode.attributes()) {
-                                if (PageParser.isAttributeToTranslate(currentNode, attr)) {
-                                    attr.setValue(translations.translate(attr.getValue(), true));
-                                }
-                            }
-//                            if ("script".equals(currentNode.nodeName())) {
-//                                currentNode.empty();
-//                            } else 
-                            if ("a".equals(currentNode.nodeName())) {
-                                String addr = currentNode.attr("href");
-                                if (addr != null) {
-                                    try {
-                                        URL u = new URL(url, addr);
-                                        if (u.getHost().equals(url.getHost())) {
-                                            if (isValidAddress(u)) {
-                                                currentNode.attr("href", SiteMapGenerator.getDynamicUrl(targetLocale, u.toString(), true));
-                                            } else {
-                                                currentNode.attr("href", u.toString());
-                                            }
-                                        }
-
-                                    } catch (MalformedURLException e) {
-                                    }
-                                }
-                            }
-                        } else if (htmlNode instanceof TextNode) {
-                            if (skipContent(htmlNode.parent())) {
-                                return;
-                            }
-                            TextNode text = (TextNode) htmlNode;
-                            if (text.text() != null) {
-                                text.text(translations.translate(text.text(), true));
-                            }
-                        }
-                    } catch (Exception e) {
-                        Helper.log(e);
-                    }
-
-                }
-            });
-            StringBuilder sb = new StringBuilder();
-            sb.append("<base href=\"");
-            sb.append(Helper.getHost(url, true));
-            sb.append("\"></base>\n");
-            sb.append("<link rel=\"canonical\" href=\"");
-            sb.append(SiteMapGenerator.getDynamicUrl(targetLocale, pageUrl, true));
-            sb.append("\"/>");
-            if (!isBot) {
-                sb.append("<script type=\"text/javascript\">");
-                sb.append("window.location.href=\"");
-                sb.append(url);
-                sb.append("\"");
-                sb.append("</script>\n");
-            }
-            document.head().prepend(sb.toString());
-
-            return document.html();
-        } catch (Exception e) {
-            Helper.log(e);
-        }
-
-        return "";
-    }
-
-    private boolean isValidAddress(URL u) {
-        String path = u.getPath().toLowerCase();
-        int idx = path.lastIndexOf('.');
-        if (idx == -1) {
-            return true;
-        }
-        String ext = path.substring(idx);
-
-        for (String s : invalidExtensions) {
-            if (s.equals(ext)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean skipContent(Node currentNode) {
-        if (currentNode == null) {
-            return true;
-        }
-        String tagName = currentNode.nodeName();
-        if ("script".equals(tagName) || "style".equals(tagName)) {
-            return true;
-        }
-
-        return false;
+    public String translate(String pageUrl, final String targetLocale) throws MalformedURLException, IOException {
+        MirrorGenerator generator = new MirrorGenerator(new ProcedureController());
+        return generator.generate(pageUrl);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
-     * Handles the HTTP
-     * <code>GET</code> method.
+     * Handles the HTTP <code>GET</code> method.
      *
      * @param request servlet request
      * @param response servlet response
@@ -210,8 +173,7 @@ public class Mirror extends HttpServlet {
     }
 
     /**
-     * Handles the HTTP
-     * <code>POST</code> method.
+     * Handles the HTTP <code>POST</code> method.
      *
      * @param request servlet request
      * @param response servlet response
